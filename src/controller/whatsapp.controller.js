@@ -1,46 +1,110 @@
-const { WhatsAppClient } = require('../service/whatsappClass.js');
+const { WhatsAppClient } = require('../service/whatsappClass');
 
-const client = new WhatsAppClient();
-
-exports.conectarClient = async (req, res) => { //Função para conectar um cliente ao WhatsApp
+exports.conectarClient = async (req, res) => {
     try {
+        const { id, telefone } = req.body;
 
-        const conexao = await client.conectarWhatsapp();
+        if (!id || !telefone) {
+            return res.status(400).json({
+                error: 'Os campos id e telefone são obrigatórios.'
+            });
+        }
 
-        return res.status(200).json({ res: conexao });
+        const client = new WhatsAppClient();
+        const resultado = await client.conectarWhatsapp(id, telefone);
+
+        return res.status(200).json({ res: resultado });
+
     } catch (error) {
-        console.error('Erro ao conectar cliente: ', error.message);
         return res.status(500).json({ error: 'Erro interno ao conectar cliente.' });
     }
 };
 
-exports.validarWhatsApp = async (req, res) => { // Função para validar se um número possui WhatsApp
+exports.validarWhatsApp = async (req, res) => {
     try {
-        const { telefone } = req.body
+        const { id, telefone } = req.body;
 
-        if (!telefone) return res.status(400).json({ error: 'O campo telefone é obrigatório.' });
-
-
-        let numero = telefone; // remove tudo que não é número
-
-        if (numero.length === 11 || numero.length === 10) {
-            numero = `55${numero}`;
-            console.log(`Número sem DDI: ${numero}`);
-            
-        } else if (numero.length === 13 || numero.length === 12) {
-            // já está com 55
-            console.log(`Número com DDI: ${numero}`);
-            
-        } else {
-            return res.status(400).json({ error: 'Formato de número inválido' });
+        if (!id || !telefone) {
+            return res.status(400).json({
+                error: 'Os campos id e telefone são obrigatórios.'
+            });
         }
 
+        const client = new WhatsAppClient();
+        const resultado = await client.validarWhatsapp(id, telefone);
 
-        const resValidacao = await client.validarWhatsapp(numero);
+        if (resultado === 'sem conexao') return res.status(203).json(resultado);
 
-        return res.status(resValidacao === 'sem conexao' ? 203 : 200).json({ res: resValidacao });
+        return res.status(200).json({ res: resultado });
+
     } catch (error) {
-        console.error('Erro ao validar número: ', error);
-        return res.status(500).json({ error: 'Erro interno ao validar número.' });
+        return res.status(500).json({
+            error: 'Erro interno ao validar número.',
+            details: error.message
+        });
     }
 };
+
+// exports.enviarMensagem = async (req, res) => {
+//     try {
+//         const { id, telefone, mensagem, nomeBoleto, boleto } = req.body;
+
+//         if (!id || !telefone || !mensagem) {
+//             return res.status(400).json({
+//                 error: 'Os campos id, telefone e mensagem são obrigatórios.'
+//             });
+//         }
+
+//         const client = new WhatsAppClient();
+//         const resultado = await client.enviarMensagem(
+//             id,
+//             telefone,
+//             mensagem,
+//             nomeBoleto,
+//             boleto
+//         );
+
+//         if (!resultado.envio) {
+//             return res.status(400).json({
+//                 error: resultado.msg
+//             });
+//         }
+
+//         return res.status(200).json({
+//             success: true,
+//             message: 'Mensagem enviada com sucesso'
+//         });
+
+//     } catch (error) {
+//         return res.status(500).json({
+//             error: 'Erro interno ao enviar mensagem.',
+//             details: error.message
+//         });
+//     }
+// };
+
+// exports.verificarSessao = async (req, res) => {
+//     try {
+//         const { id } = req.body;
+
+//         if (!id) {
+//             return res.status(400).json({
+//                 error: 'O campo id é obrigatório.'
+//             });
+//         }
+
+//         const client = new WhatsAppClient();
+//         const conectado = await client.verificarSessao(id);
+
+//         return res.status(200).json({
+//             connected: conectado,
+//             sessionId: id
+//         });
+
+//     } catch (error) {
+//         return res.status(500).json({
+//             error: 'Erro interno ao verificar sessão.',
+//             details: error.message
+//         });
+//     }
+// };

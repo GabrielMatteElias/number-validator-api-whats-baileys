@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 
+#Sessions path
+session/
+
 # Builds
 dist/
 build/
